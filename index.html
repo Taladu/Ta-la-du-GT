@@ -2,44 +2,66 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8" />
-  <title>Bản đồ chỉ đường OSM</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chỉ đường: Vinhomes Grand Park → Landmark 81</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <!-- Leaflet Routing Machine -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
   <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
   <style>
-    html, body { margin:0; height:100%; }
-    #map { height:100vh; width:100%; }
+    html, body { height: 100%; margin: 0; }
+    #map { height: 100vh; width: 100%; }
+    .topbar{
+      position: absolute; z-index: 1000; left: 10px; top: 10px;
+      background: rgba(255,255,255,.9); padding: 8px 10px; border-radius: 8px;
+      font-family: system-ui, sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,.15);
+    }
+    .topbar button{ border: 0; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
   </style>
 </head>
 <body>
 <div id="map"></div>
+
 <script>
-  // Điểm A và B (ví dụ)
-  const A = [10.77993, 106.69905]; // Nhà thờ Đức Bà  [lat, lng]
-  const B = [10.77978, 106.69918]; // Bưu điện TP.HCM [lat, lng]
+  // ===== Toạ độ [lat, lng] =====
+  const VINHOMES_GP = [10.8400, 106.8287]; // Vinhomes Grand Park
+  const LANDMARK81  = [10.7942, 106.7224]; // Landmark 81
 
-  // Khởi tạo map
-  const map = L.map('map').setView(A, 15);
+  // Khởi tạo bản đồ
+  const map = L.map('map').setView(VINHOMES_GP, 13);
 
-  // Nền bản đồ OSM
+  // Nền OSM
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; OpenStreetMap contributors'
   }).addTo(map);
 
-  // Điều khiển chỉ đường (OSRM demo server, HTTPS)
-  L.Routing.control({
-    waypoints: [ L.latLng(A[0], A[1]), L.latLng(B[0], B[1]) ],
-    lineOptions: { addWaypoints: false },
-    routeWhileDragging: true,
-    show: true
+  // Marker cho 2 điểm
+  const mA = L.marker(VINHOMES_GP).addTo(map).bindPopup('Điểm đi: Vinhomes Grand Park');
+  const mB = L.marker(LANDMARK81).addTo(map).bindPopup('Điểm đến: Landmark 81');
+
+  // Điều khiển chỉ đường bằng OSRM (HTTPS)
+  const router = L.Routing.control({
+    waypoints: [
+      L.latLng(VINHOMES_GP[0], VINHOMES_GP[1]),
+      L.latLng(LANDMARK81[0],  LANDMARK81[1])
+    ],
+    router: L.Routing.osrmv1({
+      serviceUrl: 'https://router.project-osrm.org/route/v1'
+    }),
+    lineOptions: {
+      styles: [{color:'#1e90ff', weight: 5, opacity: 0.9}]
+    },
+    routeWhileDragging: true,   // cho phép kéo để chỉnh đường
+    addWaypoints: true,         // có thể thêm điểm trung gian
+    showAlternatives: true,
+    collapsible: true
   }).addTo(map);
 
-  // Marker A/B (tuỳ chọn)
-  L.marker(A).addTo(map).bindPopup('Điểm đi');
-  L.marker(B).addTo(map).bindPopup('Điểm đến');
+  // Fit bản đồ sao cho thấy cả A và B
+  map.fitBounds(L.latLngBounds([VINHOMES_GP, LANDMARK81]).pad(0.2));
 </script>
 </body>
 </html>
