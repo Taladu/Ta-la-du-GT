@@ -1,43 +1,45 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8" />
   <title>Bản đồ chỉ đường OSM</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
   <style>
-    #map { height: 100vh; width: 100%; }
+    html, body { margin:0; height:100%; }
+    #map { height:100vh; width:100%; }
   </style>
 </head>
 <body>
-  <div id="map"></div>
-  <script>
-    // Tọa độ A (Vinhomes Grand Park) và B (Landmark 81)
-    const A = [10.77978, 106.8287];
-    const B = [10.7942, 106.7224];
+<div id="map"></div>
+<script>
+  // Điểm A và B (ví dụ)
+  const A = [10.77993, 106.69905]; // Nhà thờ Đức Bà  [lat, lng]
+  const B = [10.77978, 106.69918]; // Bưu điện TP.HCM [lat, lng]
 
-    // Khởi tạo bản đồ
-    const map = L.map('map').setView(A, 13);
+  // Khởi tạo map
+  const map = L.map('map').setView(A, 15);
 
-    // Nền bản đồ
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
+  // Nền bản đồ OSM
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
 
-    // Vẽ tuyến đường A → B
-    L.Routing.control({
-      waypoints: [
-        L.latLng(A[0], A[1]),
-        L.latLng(B[0], B[1])
-      ],
-      routeWhileDragging: false,
-      language: 'vi'
-    }).addTo(map);
-  </script>
+  // Điều khiển chỉ đường (OSRM demo server, HTTPS)
+  L.Routing.control({
+    waypoints: [ L.latLng(A[0], A[1]), L.latLng(B[0], B[1]) ],
+    lineOptions: { addWaypoints: false },
+    routeWhileDragging: true,
+    show: true
+  }).addTo(map);
+
+  // Marker A/B (tuỳ chọn)
+  L.marker(A).addTo(map).bindPopup('Điểm đi');
+  L.marker(B).addTo(map).bindPopup('Điểm đến');
+</script>
 </body>
 </html>
-
-
