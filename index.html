@@ -1,67 +1,235 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="utf-8" />
-  <title>Chỉ đường: Vinhomes Grand Park → Landmark 81</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Leaflet -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <!-- Leaflet Routing Machine -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
-  <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+  <meta charset="utf-8">
+  <title>TaladuGT - Bản đồ chỉ đường</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.js"></script>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css" rel="stylesheet">
+  <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.js"></script>
+  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.css" type="text/css">
+
   <style>
-    html, body { height: 100%; margin: 0; }
-    #map { height: 100vh; width: 100%; }
-    .topbar{
-      position: absolute; z-index: 1000; left: 10px; top: 10px;
-      background: rgba(255,255,255,.9); padding: 8px 10px; border-radius: 8px;
-      font-family: system-ui, sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,.15);
+    body { margin:0; padding:0; }
+    #map { position:absolute; top:0; bottom:0; width:100%; }
+    .mapboxgl-ctrl-logo { display:block !important; }
+    .taladu-logo {
+      position:absolute; bottom:10px; right:10px;
+      width:100px; z-index:2;
     }
-    .topbar button{ border: 0; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
-  </style>
+    .control-buttons {
+      position:absolute; top:10px; left:50%; transform:translateX(-50%);
+      background:white; padding:5px; border-radius:6px;
+      box-shadow:0 2px 5px rgba(0,0,0,0.3);
+      z-index:2; font-family:sans-serif;
+    }
+    .control-buttons button {
+      margin:2px; padding:5px 8px; cursor:pointer;
+    }
+    /* CSS cho nút YouTube */
+    .youtube-buttons {
+      position:absolute; bottom:20px; left:20px;
+      display:flex; gap:10px;
+      z-index:2;
+    }
+    .youtube-buttons .btn {
+      background: red;
+      color: white;
+      padding: 8px 20px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: bold;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 120px;
+      text-align: center;
+    }
+ .taladu-logo-wrap {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  z-index: 2;
+}
+
+.at-symbol {
+  font-size: 22px;      /* chỉnh to nhỏ chữ @ */
+  font-weight: bold;
+  margin-right: 6px;    /* khoảng cách giữa @ và logo */
+  color: #000;          /* màu chữ @ */
+}
+
+.taladu-logo {
+  width: 120px;         /* to nhỏ logo */
+  height: auto;
+  border-radius: 50%;   /* giữ hình tròn */
+  object-fit: cover;
+  box-shadow: 0 0 6px rgba(0,0,0,0.4);
+}
+ </style>
 </head>
 <body>
-<div id="map"></div>
+  <div id="map"></div>
+  <div class="taladu-logo-wrap">
+  <span class="at-symbol">@</span>
+  <img src="taladugt-logo.png" class="taladu-logo" alt="TaladuGT">
+</div>
+  <!-- Nút điều khiển -->
+  <div class="control-buttons">
+    <button id="startBtn">▶ Bắt đầu</button>
+    <button id="pauseBtn">⏸ Tạm dừng</button>
+    <button id="resumeBtn">⏵ Tiếp tục</button>
+    <button id="stopBtn">⏹ Dừng</button>
+    <button id="clearBtn">❌ Xóa tuyến</button>
+  </div>
 
-<script>
-  // ===== Toạ độ [lat, lng] =====
-  const VINHOMES_GP = [10.8400, 106.8287]; // Vinhomes Grand Park
-  const LANDMARK81  = [10.7942, 106.7224]; // Landmark 81
+  <!-- Nút kênh YouTube nổi -->
+  <div class="youtube-buttons">
+    <a href="https://www.youtube.com/@DuNguyen-r3v" target="_blank" class="btn">📺 Xem kênh</a>
+    <a href="https://www.youtube.com/@DuNguyen-r3v?sub_confirmation=1" target="_blank" class="btn">🔔 Đăng ký kênh</a>
+  </div>
 
-  // Khởi tạo bản đồ
-  const map = L.map('map').setView(VINHOMES_GP, 13);
+  <script>
+    // ===== CẤU HÌNH =====
+    mapboxgl.accessToken = 'pk.eyJ1IjoidGFsYWR1IiwiYSI6ImNtZnFxM2l2azAxNjIya3M5Nm5xNnJkODAifQ.fm-nND4Ha2oxinfUlGDFOQ';
 
-  // Nền OSM
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; OpenStreetMap contributors'
-  }).addTo(map);
+    const map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: [106.700981, 10.776889],
+      zoom: 12
+    });
 
-  // Marker cho 2 điểm
-  const mA = L.marker(VINHOMES_GP).addTo(map).bindPopup('Điểm đi: Vinhomes Grand Park');
-  const mB = L.marker(LANDMARK81).addTo(map).bindPopup('Điểm đến: Landmark 81');
+    const directions = new MapboxDirections({
+      accessToken: mapboxgl.accessToken,
+      unit: 'metric',
+      language: 'vi',
+      profile: 'mapbox/driving',
+      interactive: true
+    });
+    map.addControl(directions, 'top-left');
+    map.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
-  // Điều khiển chỉ đường bằng OSRM (HTTPS)
-  const router = L.Routing.control({
-    waypoints: [
-      L.latLng(VINHOMES_GP[0], VINHOMES_GP[1]),
-      L.latLng(LANDMARK81[0],  LANDMARK81[1])
-    ],
-    router: L.Routing.osrmv1({
-      serviceUrl: 'https://router.project-osrm.org/route/v1'
-    }),
-    lineOptions: {
-      styles: [{color:'#1e90ff', weight: 5, opacity: 0.9}]
-    },
-    routeWhileDragging: true,   // cho phép kéo để chỉnh đường
-    addWaypoints: true,         // có thể thêm điểm trung gian
-    showAlternatives: true,
-    collapsible: true
-  }).addTo(map);
+    // ===== XE DI CHUYỂN =====
+    let carMarker;
+    let routeCoords = [];
+    let animation;
+    let step = 0;
 
-  // Fit bản đồ sao cho thấy cả A và B
-  map.fitBounds(L.latLngBounds([VINHOMES_GP, LANDMARK81]).pad(0.2));
-</script>
+    directions.on('route', (e) => {
+      if (e.route.length) {
+        const coords = e.route[0].geometry.coordinates;
+        routeCoords = coords;
+        step = 0;
+        if (!carMarker) {
+          carMarker = new mapboxgl.Marker({ color: 'red' })
+            .setLngLat(coords[0])
+            .addTo(map);
+        } else {
+          carMarker.setLngLat(coords[0]);
+        }
+      }
+    });
+
+    document.getElementById("startBtn").addEventListener("click", () => {
+      if (!routeCoords || routeCoords.length === 0) {
+        alert("Chưa có tuyến đường! Hãy nhập điểm đi và điểm đến.");
+        return;
+      }
+      step = 0;
+      carMarker.setLngLat(routeCoords[0]);
+      if (animation) clearInterval(animation);
+      animation = setInterval(() => {
+        if (step < routeCoords.length) {
+          carMarker.setLngLat(routeCoords[step]);
+          map.panTo(routeCoords[step]);
+          step++;
+        } else {
+          clearInterval(animation);
+          alert("Đã đến điểm đến!");
+        }
+      }, 500);
+    });
+
+    document.getElementById("pauseBtn").addEventListener("click", () => {
+      if (animation) clearInterval(animation);
+    });
+
+    document.getElementById("resumeBtn").addEventListener("click", () => {
+      if (!routeCoords || step >= routeCoords.length) return;
+      if (animation) clearInterval(animation);
+      animation = setInterval(() => {
+        if (step < routeCoords.length) {
+          carMarker.setLngLat(routeCoords[step]);
+          map.panTo(routeCoords[step]);
+          step++;
+        } else {
+          clearInterval(animation);
+          alert("Đã đến điểm đến!");
+        }
+      }, 500);
+    });
+
+    document.getElementById("stopBtn").addEventListener("click", () => {
+      if (animation) clearInterval(animation);
+      if (routeCoords.length > 0) {
+        carMarker.setLngLat(routeCoords[0]);
+        step = 0;
+      }
+    });
+
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      if (animation) clearInterval(animation);
+      directions.removeRoutes();
+      routeCoords = [];
+      step = 0;
+      if (carMarker) carMarker.remove();
+      carMarker = null;
+    });
+
+    // ===== ĐỊA ĐIỂM =====
+    const places = [
+      {
+        name: "Landmark 81",
+        coords: [106.7217, 10.7942],
+        youtube: "https://www.youtube.com/embed/LRoM0lOyo5g"
+      },
+      {
+        name: "Chợ Bến Thành",
+        coords: [106.6983, 10.7721],
+        youtube: "https://www.youtube.com/embed/LRoM0lOyo5g"
+      },
+      {
+        name: "Nhà thờ Đức Bà",
+        coords: [106.7009, 10.7798],
+        youtube: "https://www.youtube.com/embed/LRoM0lOyo5g"
+      }
+    ];
+
+    places.forEach(p => {
+      const el = document.createElement('div');
+      el.className = 'marker';
+      el.style.backgroundImage = "url('https://cdn-icons-png.flaticon.com/512/1384/1384060.png')";
+      el.style.width = "30px";
+      el.style.height = "30px";
+      el.style.backgroundSize = "cover";
+      el.style.cursor = "pointer";
+
+      new mapboxgl.Marker(el).setLngLat(p.coords)
+        .setPopup(new mapboxgl.Popup().setHTML(`
+          <h3>${p.name}</h3>
+          <iframe width="320" height="200"
+            src="${p.youtube}"
+            frameborder="0"
+            allowfullscreen>
+          </iframe>
+        `))
+        .addTo(map);
+    });
+  </script>
 </body>
 </html>
